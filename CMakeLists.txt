@@ -3,4 +3,5 @@ project(genetic)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_library(genetic library.cpp)
+add_library(genetic src/random_generator.cpp include/random_generator.h)
+target_include_directories(genetic PUBLIC include)
