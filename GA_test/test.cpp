@@ -2,6 +2,7 @@
 // Created by hungr on 2020/07/23.
 //
 #include <algorithm>
+#include <iostream>
 #include <numeric>
 #include <string>
 #include <gtest/gtest.h>
@@ -24,15 +25,17 @@ namespace genetic {
 #include "genetic.h"
 
 namespace {
-    TEST(COMPILE_TEST, GA_CONFIG) {
+    TEST(COMPILE_TEST, GA) {
         genetic::ga_config<std::string> config;
         using individual_t = genetic::ga_config<std::string>::individual_t;
         config.population = 20;
-        config.epoch = 100;
+        config.epoch = 200;
         config.fitness_max = 1.0f;
         config.fitness_min = 0.0f;
-        config.callback = [](const std::vector<float>& f) {
-            return;
+        config.callback = [](const std::vector<individual_t>& d, const std::vector<float>& f) {
+            auto iter = std::max_element(f.begin(), f.end());
+            std::cout << std::get<0>(d[iter - f.begin()]) << ":" <<
+                    *iter << " average:" << std::accumulate(f.begin(), f.end(), 0.0f) / f.size() << std::endl;
         };
         config.select = genetic::roulet<std::string>{};
         config.step = [](const std::vector<individual_t>& d) {
@@ -40,7 +43,7 @@ namespace {
             std::transform(d.begin(), d.end(), std::back_inserter(f), [](const individual_t& x) {
                 float t = 0.0f;
                 for(auto c : std::get<0>(x)) t += std::abs(c - 'a');
-                return (25 - t) / 25;
+                return (100 - t) / 100;
             });
             return f;
         };
@@ -50,7 +53,15 @@ namespace {
             for(auto& c : s) c += random_generator::random_uniform<int>(0, 25);
             return s;
         };
-
+        config.node_mutates.push_back(std::make_pair(0.01f, [](float p, individual_t& d) {
+            for(auto&& c : std::get<0>(d)) {
+                if(random_generator::random<float>() <= p) {
+                    c = static_cast<char>(random_generator::random_uniform<int>(0, 25) + 97);
+                }
+            }
+        }));
+        genetic::ga g(config);
+        g.run();
     }
 
     TEST(RUNTIME_TEST, CROSSOVER_TEST1) {
