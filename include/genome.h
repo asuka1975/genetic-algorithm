@@ -10,16 +10,32 @@
 
 namespace genetic {
     inline namespace genetic_internal {
-        inline constexpr int crossover = 0;
+        struct crossover_type {};
+
+        crossover_type crossover(const crossover_type &, const crossover_type &) { return crossover_type{}; }
     }
-    template <class T, class = void>
-    struct is_genome : std::false_type<T> { };
 
-    template <class T, std::enable_if_t<std::is_copy_assignable_v<T> && std::is_invocable_r_v<T, decltype(crossover), T, T>>>
-    struct is_genome : std::true_type<T> { };
+    template<class T, class = void>
+    struct is_callable_crossover : std::false_type {};
 
-    template <class T>
-    using is_genome_v = is_genome<T>::value;
+    template<class T>
+    struct is_callable_crossover<T, std::void_t<decltype(crossover(std::declval<T>(), std::declval<T>()))>>
+            : std::true_type {
+    };
+
+    template<class T, class = void>
+    struct is_genome : public std::false_type {};
+
+    template<class T>
+    struct is_genome<T, std::enable_if_t<
+            std::is_copy_assignable_v<T> &&
+            std::is_copy_constructible_v<T> &&
+            std::is_default_constructible_v<T>&&
+            is_callable_crossover<T>::value>>
+            : public std::true_type {
+    };
+
+    template<class T>
+    inline constexpr bool is_genome_v = is_genome<T>::value;
 }
-
 #endif //GENETIC_GENOME_H

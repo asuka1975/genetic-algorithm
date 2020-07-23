@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.16)
 project(genetic)
 
 set(CMAKE_CXX_STANDARD 17)
+set(GA_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
+set(GA_LIBRARY_DIR "${PROJECT_BINARY_DIR}")
 
-add_library(genetic src/random_generator.cpp include/random_generator.h)
+enable_testing()
+add_library(genetic src/random_generator.cpp include/random_generator.h include/selector.h include/genetic.h)
 target_include_directories(genetic PUBLIC include)
+
+add_subdirectory(GA_test)
