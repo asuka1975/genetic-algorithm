@@ -12,7 +12,7 @@ namespace genetic {
     inline namespace genetic_internal {
         struct crossover_type {};
 
-        crossover_type crossover(const crossover_type &, const crossover_type &) { return crossover_type{}; }
+        inline crossover_type crossover(const crossover_type &, const crossover_type &) { return crossover_type{}; }
     }
 
     template<class T, class = void>
