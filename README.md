@@ -66,48 +66,30 @@ However, the class which can behavior as genome should be copy-assignable, copy-
 The function `crossover` should have a signature as follows.
 
 ```c++
-TGenome crossover(const TGenome&, const TGenome&);
+class TGenome {
+public:
+    static TGenome crossover(const TGenome&, const TGenome&);
+};
 ```
-And, `crossover` must be defined in namespace `genetic` before `#include<genetic.h>`.
 
 for example,
 
 ```c++
 #include <string>
-namespace genetic {
-    std::string crossover(const std::string& d1, const std::string& d2) {
-        std::string d = d1;
-        for(int i = 0; i < d.size(); i++) {
-            if(i < d.size() / 2) d[i] = d2[i];
+#include <genetic.h>
+class string_genome {
+public:
+    string_genome crossover(const string_genome& d1, const string_genome& d2) {
+        string_genome d = d1;
+        for(int i = 0; i < d.data.size(); i++) {
+            if(i < d.data.size() / 2) d.data[i] = d2.data[i];
         }
         return d;
     }
+private:
+    std::string data;
 }
-#include <genetic.h>
 ``` 
-
-or
-
-defined in crossover.h
-```c++
-#include <string>
-namespace genetic {
-    std::string crossover(const std::string& d1, const std::string& d2) {
-        std::string d = d1;
-        for(int i = 0; i < d.size(); i++) {
-            if(i < d.size() / 2) d[i] = d2[i];
-        }
-        return d;
-    }
-}
-```
-
-in main.cpp
-
-```c++
-#include "crossover.h"
-#include <genetic.h>
-```
 
 ## ga_config
 Ga_config means a configuration of genetic algorithm. It has 11 member variables and a member type.
