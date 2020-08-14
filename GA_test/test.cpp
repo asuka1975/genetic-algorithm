@@ -7,42 +7,49 @@
 #include <string>
 #include <gtest/gtest.h>
 #include "random_generator.h"
+#include "genetic.h"
 
-namespace genetic {
-    std::string crossover(const std::string& d1, const std::string& d2) {
-        std::string d = d1;
-        for(auto i = 0; i < d1.size(); i++) {
-            if(i < d1.size() / 2) d[i] = d2[i];
+class string_genome {
+public:
+    static string_genome crossover(const string_genome &d1, const string_genome &d2) {
+        string_genome d = d1;
+        for (auto i = 0; i < d1.data.size(); i++) {
+            if (i < d1.data.size() / 2) d.data[i] = d2.data[i];
         }
         return d;
     }
+    std::string data;
+};
 
-    int crossover(const int& d1, const int& d2) {
-        return d1 < d2 ? d2 : d1;
+class int_genome {
+public:
+    static int_genome crossover(const int_genome& d1, const int_genome& d2) {
+        int_genome d { d1.data < d2.data ? d2.data : d1.data };
+        return d;
     }
-}
+    int data;
+};
 
-#include "genetic.h"
 
 namespace {
     TEST(COMPILE_TEST, GA) {
-        genetic::ga_config<std::string> config;
-        using individual_t = genetic::ga_config<std::string>::individual_t;
+        genetic::ga_config<string_genome> config;
+        using individual_t = genetic::ga_config<string_genome>::individual_t;
         config.population = 20;
         config.epoch = 200;
         config.fitness_max = 1.0f;
         config.fitness_min = 0.0f;
         config.callback = [](const std::vector<individual_t>& d, const std::vector<float>& f) {
             auto iter = std::max_element(f.begin(), f.end());
-            std::cout << std::get<0>(d[iter - f.begin()]) << ":" <<
+            std::cout << std::get<0>(d[iter - f.begin()]).data << ":" <<
                     *iter << " average:" << std::accumulate(f.begin(), f.end(), 0.0f) / f.size() << std::endl;
         };
-        config.select = genetic::roulet<std::string>{};
+        config.select = genetic::roulet<string_genome>{};
         config.step = [](const std::vector<individual_t>& d) {
             std::vector<float> f;
             std::transform(d.begin(), d.end(), std::back_inserter(f), [](const individual_t& x) {
                 float t = 0.0f;
-                for(auto c : std::get<0>(x)) t += std::abs(c - 'a');
+                for(auto c : std::get<0>(x).data) t += std::abs(c - 'a');
                 return (100 - t) / 100;
             });
             return f;
@@ -51,37 +58,37 @@ namespace {
         config.initializer = []() {
             std::string s = "aaaa";
             for(auto& c : s) c += random_generator::random_uniform<int>(0, 25);
-            return s;
+            return string_genome{ s };
         };
-        config.node_mutates.push_back(std::make_pair(0.01f, [](float p, individual_t& d) {
-            for(auto&& c : std::get<0>(d)) {
+        config.node_mutates.emplace_back(0.01f, [](float p, individual_t& d) {
+            for(auto&& c : std::get<0>(d).data) {
                 if(random_generator::random<float>() <= p) {
                     c = static_cast<char>(random_generator::random_uniform<int>(0, 25) + 97);
                 }
             }
-        }));
+        });
         genetic::ga g(config);
         g.run();
     }
 
     TEST(RUNTIME_TEST, CROSSOVER_TEST1) {
-        std::tuple<std::string> d1 = std::make_tuple("aaaa");
-        std::tuple<std::string> d2 = std::make_tuple("bbbb");
+        std::tuple<string_genome> d1 = std::make_tuple(string_genome{"aaaa"});
+        std::tuple<string_genome> d2 = std::make_tuple(string_genome{"bbbb"});
         auto d3 = genetic::crossover(d1, d2);
-        ASSERT_EQ("bbaa", std::get<0>(d3));
+        ASSERT_EQ("bbaa", std::get<0>(d3).data);
         auto d4 = genetic::crossover(d2, d1);
-        ASSERT_EQ("aabb", std::get<0>(d4));
+        ASSERT_EQ("aabb", std::get<0>(d4).data);
     }
 
     TEST(RUNTIME_TEST, CROSSOVER_TEST2) {
-        std::tuple<std::string, int> d1 = std::make_tuple("aaaa", 4);
-        std::tuple<std::string, int> d2 = std::make_tuple("bbbb", 3);
+        std::tuple<string_genome, int_genome> d1 = std::make_tuple(string_genome{"aaaa"}, int_genome{4});
+        std::tuple<string_genome, int_genome> d2 = std::make_tuple(string_genome{"bbbb"}, int_genome{3});
         auto d3 = genetic::crossover(d1, d2);
-        ASSERT_EQ("bbaa", std::get<0>(d3));
-        ASSERT_EQ(4, std::get<1>(d3));
+        ASSERT_EQ("bbaa", std::get<0>(d3).data);
+        ASSERT_EQ(4, std::get<1>(d3).data);
         auto d4 = genetic::crossover(d2, d1);
-        ASSERT_EQ("aabb", std::get<0>(d4));
-        ASSERT_EQ(4, std::get<1>(d4));
+        ASSERT_EQ("aabb", std::get<0>(d4).data);
+        ASSERT_EQ(4, std::get<1>(d4).data);
     }
 }
 

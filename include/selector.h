@@ -12,7 +12,7 @@ namespace genetic {
     template <std::size_t I, class... TArgs>
     inline std::tuple_element_t<I, std::tuple<TArgs...>>
     apply(const std::tuple<TArgs...>& d1, const std::tuple<TArgs...>& d2) {
-        return crossover(std::get<I>(d1), std::get<I>(d2));
+        return std::tuple_element_t<I, std::tuple<TArgs...>>::crossover(std::get<I>(d1), std::get<I>(d2));
     }
 
     template <std::size_t... I, class... TArgs>

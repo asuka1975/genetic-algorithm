@@ -9,17 +9,11 @@
 #include <type_traits>
 
 namespace genetic {
-    inline namespace genetic_internal {
-        struct crossover_type {};
-
-        inline crossover_type crossover(const crossover_type &, const crossover_type &) { return crossover_type{}; }
-    }
-
     template<class T, class = void>
     struct is_callable_crossover : std::false_type {};
 
     template<class T>
-    struct is_callable_crossover<T, std::void_t<decltype(crossover(std::declval<T>(), std::declval<T>()))>>
+    struct is_callable_crossover<T, std::void_t<decltype(T::crossover(std::declval<T>(), std::declval<T>()))>>
             : std::true_type {
     };
 
