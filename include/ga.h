@@ -23,13 +23,15 @@ namespace genetic {
     template <class... TArgs>
     struct ga_config {
         using individual_t = std::tuple<TArgs...>;
+        using expression_t = std::tuple<typename TArgs::expression_t...>;
         std::uint64_t population;
         std::uint64_t epoch;
         float fitness_max;
         float fitness_min;
         std::function<void(const std::vector<individual_t>&, const std::vector<float>&)> callback;
         std::function<std::vector<individual_t>(const std::vector<individual_t>&, const std::vector<float>&)> select;
-        std::function<std::vector<float>(const std::vector<individual_t>&)> step;
+        std::tuple<std::function<typename TArgs::expression_t(const TArgs&)>...> express;
+        std::function<std::vector<float>(const std::vector<expression_t>&)> step;
         std::function<float(float)> scale;
         std::function<individual_t()> initializer;
         std::vector<std::pair<float, std::function<void(individual_t&)>>> mutates;
@@ -45,6 +47,12 @@ namespace genetic {
         const ga_config<TArgs...> config;
     private:
         std::vector<individual_t> population;
+        template <class T> class expression_impl;
+        template <std::size_t... I>
+        struct expression_impl<std::index_sequence<I...>> {
+            static typename ga_config<TArgs...>::expression_t express(const ga_config<TArgs...>& g, const typename ga_config<TArgs...>::individual_t& d);
+        };
+        typename ga_config<TArgs...>::expression_t express(const typename ga_config<TArgs...>::individual_t& d) const;
     };
 
     template <class... TArgs>
@@ -57,7 +65,11 @@ namespace genetic {
     template <class... TArgs>
     inline void ga<TArgs...>::run() {
         for(auto i = 0; i < config.epoch; i++) {
-            auto f = config.step(population);
+            std::vector<typename ga_config<TArgs...>::expression_t> e;
+            std::transform(population.begin(), population.end(), std::back_inserter(e), [&g=*this](const auto& x) {
+                return g.express(x);
+            });
+            auto f = config.step(e);
             std::for_each(f.begin(), f.end(), [
                     scale = this->config.scale,
                     fitness_max = this->config.fitness_max,
@@ -86,6 +98,18 @@ namespace genetic {
     }
 
     template <class... TArgs>
+    template <std::size_t... I>
+    typename ga_config<TArgs...>::expression_t ga<TArgs...>::expression_impl<std::index_sequence<I...>>::
+    express(const ga_config<TArgs...>& g, const typename ga_config<TArgs...>::individual_t& d) {
+        return std::make_tuple(std::get<I>(g.express)(std::get<I>(d))...);
+    }
+
+    template <class... TArgs>
+    inline typename ga_config<TArgs...>::expression_t ga<TArgs...>::express(const typename ga_config<TArgs...>::individual_t &d) const {
+        return expression_impl<std::make_index_sequence<std::tuple_size_v<std::tuple<TArgs...>>>>::express(config, d);
+    }
+
+    template <class... TArgs>
     inline ga_config<TArgs...>::ga_config() {
         static_assert(all_true_v<is_genome_v<TArgs>...>, "These genomes include genomes which can't crossover.");
         population = 0;
@@ -97,7 +121,7 @@ namespace genetic {
                     const std::vector<float>&) {
             return std::vector<typename ga_config<TArgs...>::individual_t>{};
         };
-        step = [](const std::vector<typename ga_config<TArgs...>::individual_t>&) {
+        step = [](const std::vector<typename ga_config<TArgs...>::expression_t>&) {
             return std::vector<float>{};
         };
         scale = [](float x) { return x; };
