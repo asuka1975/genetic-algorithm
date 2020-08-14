@@ -42,6 +42,7 @@ config.epoch = 200;
 config.fitness_max = 1.0f;
 config.fitness_min = 0.0f;
 config.select = roulet{};
+config.express = /* convert genotype to phenotype */;
 config.step = /* describe task */;
 config.scale = [](float x) { return x; };
 config.initializer = /* every individual initialization */;
@@ -108,6 +109,7 @@ Ga_config means a configuration of genetic algorithm. It has 11 member variables
 |fitness_min|float|minimum possible value of fitness|
 |callback|std::function<void>(const std::vector<individual_t>&, const std::vector\<float\>&)|always called every time learning of one generation has finished|
 |select|std::function<std::vector<individual_t>(const std::vector<individual_t>&, const std::vector<float>&)>|generate and select new individuals from old individuals by fitness values|
+|express|std::tuple<std::function<typename TArgs::expression_t(const TArgs&)>...>|convert genotype to phenotype|
 |step|std::function<std::vector<float>(const std::vector<individual_t>&)>|individuals do task|
 |scale|std::function<float(float)>|change scale of fitness value|
 |initializer|std::function<individual_t()>|initialize per one individual|
@@ -121,6 +123,7 @@ Ga is a class which execute genetic algorithm. It has one member function and on
 |name|explanation|
 |:---:|:---|
 |individual_t|the same as individual_t in ga_config|
+|expression_t|phenotype|
 
 ### member function
 |name|explanation|
