@@ -11,6 +11,7 @@
 
 class string_genome {
 public:
+    using expression_t = std::string;
     static string_genome crossover(const string_genome &d1, const string_genome &d2) {
         string_genome d = d1;
         for (auto i = 0; i < d1.data.size(); i++) {
@@ -23,6 +24,7 @@ public:
 
 class int_genome {
 public:
+    using expression_t = int;
     static int_genome crossover(const int_genome& d1, const int_genome& d2) {
         int_genome d { d1.data < d2.data ? d2.data : d1.data };
         return d;
@@ -35,6 +37,7 @@ namespace {
     TEST(COMPILE_TEST, GA) {
         genetic::ga_config<string_genome> config;
         using individual_t = genetic::ga_config<string_genome>::individual_t;
+        using expression_t = genetic::ga_config<string_genome>::expression_t;
         config.population = 20;
         config.epoch = 200;
         config.fitness_max = 1.0f;
@@ -45,11 +48,14 @@ namespace {
                     *iter << " average:" << std::accumulate(f.begin(), f.end(), 0.0f) / f.size() << std::endl;
         };
         config.select = genetic::roulet<string_genome>{};
-        config.step = [](const std::vector<individual_t>& d) {
+        std::get<0>(config.express) = [](const std::tuple_element_t<0, individual_t>& e) {
+            return e.data;
+        };
+        config.step = [](const std::vector<expression_t>& d) {
             std::vector<float> f;
-            std::transform(d.begin(), d.end(), std::back_inserter(f), [](const individual_t& x) {
+            std::transform(d.begin(), d.end(), std::back_inserter(f), [](const expression_t& x) {
                 float t = 0.0f;
-                for(auto c : std::get<0>(x).data) t += std::abs(c - 'a');
+                for(auto c : std::get<0>(x)) t += std::abs(c - 'a');
                 return (100 - t) / 100;
             });
             return f;
