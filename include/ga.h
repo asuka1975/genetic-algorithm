@@ -28,7 +28,7 @@ namespace genetic {
         std::uint64_t epoch;
         float fitness_max;
         float fitness_min;
-        std::function<void(const std::vector<individual_t>&, const std::vector<float>&)> callback;
+        std::function<void(const std::vector<expression_t>&, const std::vector<float>&)> callback;
         std::function<std::vector<individual_t>(const std::vector<individual_t>&, const std::vector<float>&)> select;
         std::tuple<std::function<typename TArgs::expression_t(const TArgs&)>...> express;
         std::function<std::vector<float>(const std::vector<expression_t>&)> step;
@@ -78,7 +78,7 @@ namespace genetic {
                 m -= fitness_min;
                 m = scale(m / (fitness_max - fitness_min));
             });
-            config.callback(population, f);
+            config.callback(e, f);
             auto sum = std::accumulate(f.begin(), f.end(), 0.0f);
             if(std::abs(sum) <= std::numeric_limits<float>::min()) sum = 1.0f;
             std::for_each(f.begin(), f.end(), [&sum](auto& m) { m /= sum; });
@@ -116,7 +116,7 @@ namespace genetic {
         epoch = 0;
         fitness_max = 1.0f;
         fitness_min = 0.0f;
-        callback = [](const std::vector<individual_t>&, const std::vector<float>&) -> void {};
+        callback = [](const std::vector<expression_t>&, const std::vector<float>&) -> void {};
         select = [](const std::vector<typename ga_config<TArgs...>::individual_t>&,
                     const std::vector<float>&) {
             return std::vector<typename ga_config<TArgs...>::individual_t>{};
