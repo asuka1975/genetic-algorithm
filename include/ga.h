@@ -28,6 +28,7 @@ namespace genetic {
         std::uint64_t epoch;
         float fitness_max;
         float fitness_min;
+        std::uint32_t save = 0;
         std::function<void(const std::vector<expression_t>&, const std::vector<float>&)> callback;
         std::function<std::vector<individual_t>(const std::vector<individual_t>&, const std::vector<float>&)> select;
         std::tuple<std::function<typename TArgs::expression_t(const TArgs&)>...> express;
@@ -65,8 +66,8 @@ namespace genetic {
     template <class... TArgs>
     inline void ga<TArgs...>::run() {
         for(auto i = 0; i < config.epoch; i++) {
-            std::vector<typename ga_config<TArgs...>::expression_t> e;
-            std::transform(population.begin(), population.end(), std::back_inserter(e), [&g=*this](const auto& x) {
+            std::vector<typename ga_config<TArgs...>::expression_t> e(population.size());
+            std::transform(population.begin(), population.end(), e.begin(), [&g=*this](const auto& x) {
                 return g.express(x);
             });
             auto f = config.step(e);
@@ -84,7 +85,12 @@ namespace genetic {
             std::for_each(f.begin(), f.end(), [&sum](auto& m) { m /= sum; });
 
             population = config.select(population, f);
+            std::uint32_t j = 0;
             for(auto& d : population) {
+                if(j < config.save) {
+                    j++;
+                    continue;
+                }
                 for(auto [rate, mutate] : config.mutates) {
                     if(random_generator::random<float>() < rate) {
                         mutate(d);
