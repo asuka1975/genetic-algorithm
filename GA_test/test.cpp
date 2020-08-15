@@ -42,9 +42,9 @@ namespace {
         config.epoch = 200;
         config.fitness_max = 1.0f;
         config.fitness_min = 0.0f;
-        config.callback = [](const std::vector<individual_t>& d, const std::vector<float>& f) {
+        config.callback = [](const std::vector<expression_t>& d, const std::vector<float>& f) {
             auto iter = std::max_element(f.begin(), f.end());
-            std::cout << std::get<0>(d[iter - f.begin()]).data << ":" <<
+            std::cout << std::get<0>(d[iter - f.begin()]) << ":" <<
                     *iter << " average:" << std::accumulate(f.begin(), f.end(), 0.0f) / f.size() << std::endl;
         };
         config.select = genetic::roulet<string_genome>{};
