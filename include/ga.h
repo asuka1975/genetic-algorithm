@@ -66,8 +66,9 @@ namespace genetic {
     template <class... TArgs>
     inline void ga<TArgs...>::run() {
         for(auto i = 0; i < config.epoch; i++) {
-            std::vector<typename ga_config<TArgs...>::expression_t> e(population.size());
-            std::transform(population.begin(), population.end(), e.begin(), [&g=*this](const auto& x) {
+            std::vector<typename ga_config<TArgs...>::expression_t> e;
+            e.reserve(population.size());
+            std::transform(population.begin(), population.end(), std::back_inserter(e), [&g=*this](const auto& x) {
                 return g.express(x);
             });
             auto f = config.step(e);
