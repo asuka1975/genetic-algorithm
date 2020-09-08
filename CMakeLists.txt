@@ -9,4 +9,6 @@ enable_testing()
 add_library(genetic src/random_generator.cpp include/random_generator.h include/selector.h include/genetic.h)
 target_include_directories(genetic PUBLIC include)
 
-add_subdirectory(GA_test)
+if(NOT TARGET GA_test)
+    add_subdirectory(GA_test)
+endif()
