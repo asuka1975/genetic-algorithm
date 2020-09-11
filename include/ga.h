@@ -34,7 +34,7 @@ namespace genetic {
         std::tuple<std::function<typename TArgs::expression_t(const TArgs&)>...> express;
         std::function<std::vector<float>(const std::vector<expression_t>&)> step;
         std::function<float(float)> scale;
-        std::function<individual_t()> initializer;
+        std::tuple<std::function<TArgs()>...> initializer;
         std::vector<std::pair<float, std::function<void(individual_t&)>>> mutates;
         std::vector<std::pair<float, std::function<void(float, individual_t&)>>> node_mutates;
         ga_config();
@@ -54,13 +54,24 @@ namespace genetic {
             static typename ga_config<TArgs...>::expression_t express(const ga_config<TArgs...>& g, const typename ga_config<TArgs...>::individual_t& d);
         };
         typename ga_config<TArgs...>::expression_t express(const typename ga_config<TArgs...>::individual_t& d) const;
+        template <class T> struct initializer_impl;
+        template <std::size_t... I>
+        struct initializer_impl<std::index_sequence<I...>> {
+            static std::tuple<TArgs...> initialize(const std::tuple<std::function<TArgs()>...>&);
+        };
     };
+
+    template<class... TArgs>
+    template<size_t... I>
+    std::tuple<TArgs...> ga<TArgs...>::initializer_impl<std::index_sequence<I...>>::initialize(const std::tuple<std::function<TArgs()>...>& i) {
+        return std::make_tuple(std::get<I>(i)()...);
+    }
 
     template <class... TArgs>
     inline ga<TArgs...>::ga(const ga_config<TArgs...>& config) : config(config) {
         static_assert(all_true_v<is_genome_v<TArgs>...>, "These genomes include genomes which can't crossover.");
         population.resize(config.population);
-        for(auto& d : population) d = config.initializer();
+        for(auto& d : population) d = initializer_impl<std::index_sequence_for<TArgs...>>::initialize(config.initializer);
     }
 
     template <class... TArgs>
