@@ -143,9 +143,7 @@ namespace genetic {
             return std::vector<float>{};
         };
         scale = [](float x) { return x; };
-        initializer = []() {
-            return typename ga_config<TArgs...>::individual_t{};
-        };
+        initializer = std::make_tuple([]() { return TArgs{}; }...);
     }
 }
 

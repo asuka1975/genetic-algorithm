@@ -62,7 +62,7 @@ namespace {
             return f;
         };
         config.scale = [](float x) { return x * x; };
-        config.initializer = []() {
+        std::get<0>(config.initializer) = []() {
             std::string s = "aaaa";
             for(auto& c : s) c += random_generator::random_uniform<int>(0, 25);
             return string_genome{ s };
