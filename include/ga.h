@@ -34,6 +34,7 @@ namespace genetic {
         std::tuple<std::function<typename TArgs::expression_t(const TArgs&)>...> express;
         std::function<std::vector<float>(const std::vector<expression_t>&)> step;
         std::function<void(const std::vector<expression_t>&)> test;
+        std::function<void(const std::vector<individual_t>&)> next;
         std::function<float(float)> scale;
         std::tuple<std::function<TArgs()>...> initializer;
         std::vector<std::pair<float, std::function<void(individual_t&)>>> mutates;
@@ -120,6 +121,7 @@ namespace genetic {
             return g.express(x);
         });
         config.test(e);
+        config.next(population);
     }
 
     template <class... TArgs>
@@ -152,6 +154,7 @@ namespace genetic {
         scale = [](float x) { return x; };
         initializer = std::make_tuple([]() { return TArgs{}; }...);
         test = [](const std::vector<typename ga_config<TArgs...>::expression_t>&) {};
+        next = [](const std::vector<typename ga_config<TArgs...>::individual_t>&) {};
     }
 }
 
