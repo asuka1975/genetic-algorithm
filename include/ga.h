@@ -50,7 +50,7 @@ namespace genetic {
         const ga_config<TArgs...> config;
     private:
         std::vector<individual_t> population;
-        template <class T> class expression_impl;
+        template <class T> struct expression_impl;
         template <std::size_t... I>
         struct expression_impl<std::index_sequence<I...>> {
             static typename ga_config<TArgs...>::expression_t express(const ga_config<TArgs...>& g, const typename ga_config<TArgs...>::individual_t& d);
@@ -78,7 +78,7 @@ namespace genetic {
 
     template <class... TArgs>
     inline void ga<TArgs...>::run() {
-        for(auto i = 0; i < config.epoch; i++) {
+        for(std::size_t i = 0; i < config.epoch; i++) {
             std::vector<typename ga_config<TArgs...>::expression_t> e;
             e.reserve(population.size());
             std::transform(population.begin(), population.end(), std::back_inserter(e), [&g=*this](const auto& x) {

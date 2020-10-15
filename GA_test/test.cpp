@@ -14,7 +14,7 @@ public:
     using expression_t = std::string;
     static string_genome crossover(const string_genome &d1, const string_genome &d2) {
         string_genome d = d1;
-        for (auto i = 0; i < d1.data.size(); i++) {
+        for (std::size_t i = 0; i < d1.data.size(); i++) {
             if (i < d1.data.size() / 2) d.data[i] = d2.data[i];
         }
         return d;
