@@ -99,7 +99,7 @@ namespace genetic {
 
         //Instead of `pop` and `fitness`, vector of index and fitness pair is sorted.
         std::vector<std::pair<std::size_t, float>> f(pop.size());
-        for(auto i = 0; i < f.size(); i++) {
+        for(std::size_t i = 0; i < f.size(); i++) {
             f[i] = std::make_pair(i, fitness[i]);
         }
         std::sort(f.begin(), f.end(), [](auto const& p1, auto const& p2) { return p1.second > p2.second; });
@@ -114,8 +114,8 @@ namespace genetic {
             return 0lu;
         };
 
-        for(auto i = 0; i < elitism && i < p.size(); i++) p[i] = pop[f[i].first];
-        for(auto i = elitism; i < p.size(); i++) {
+        for(std::size_t i = 0; i < elitism && i < p.size(); i++) p[i] = pop[f[i].first];
+        for(std::size_t i = elitism; i < p.size(); i++) {
             auto k = rlt(random_generator::random<float>());
             auto l = rlt(random_generator::random<float>());
             p[i] = genetic::crossover(pop[k], pop[l]);
