@@ -97,6 +97,25 @@ namespace {
         ASSERT_EQ("aabb", std::get<0>(d4).data);
         ASSERT_EQ(4, std::get<1>(d4).data);
     }
+
+    TEST(RUNTIME_TEST, RANDOM_GENERATOR) {
+        float x1, x2, x3;
+        std::thread t1([&x1]() {
+            x1 = random_generator::random<float>();
+        });
+        std::thread t2([&x2]() {
+            x2 = random_generator::random<float>();
+        });
+        std::thread t3([&x3]() {
+            x3 = random_generator::random<float>();
+        });
+        t1.join();
+        t2.join();
+        t3.join();
+        std::cout << x1 << std::endl;
+        std::cout << x2 << std::endl;
+        std::cout << x3 << std::endl;
+    }
 }
 
 int main(int argc, char **argv) {
