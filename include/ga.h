@@ -12,6 +12,7 @@
 #include <limits>
 #include <type_traits>
 #include "genome.h"
+#include "random_generator.h"
 
 namespace genetic {
     template <bool...> struct bool_pack;
