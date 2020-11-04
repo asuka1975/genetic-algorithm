@@ -37,17 +37,17 @@ private:
 };
 
 template<class T, std::enable_if_t<std::is_integral_v<T>, std::nullptr_t>>
-T random_generator::random() {
+inline T random_generator::random() {
     return random_uniform<T>(std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max());
 }
 
 template<class T, std::enable_if_t<std::is_floating_point_v<T>, std::nullptr_t>>
-T random_generator::random() {
+inline T random_generator::random() {
     return random_uniform<T>(0.0, 1.0);
 }
 
 template<class T, std::enable_if_t<std::is_integral_v<T>, std::nullptr_t>>
-T random_generator::random_uniform(T min, T max) {
+inline T random_generator::random_uniform(T min, T max) {
     std::uniform_int_distribution<T> dist(min, max);
     auto&& id = std::this_thread::get_id();
     if(thread_own_gens.find(id) == thread_own_gens.end()) {
@@ -58,7 +58,7 @@ T random_generator::random_uniform(T min, T max) {
 }
 
 template<class T, std::enable_if_t<std::is_floating_point_v<T>, std::nullptr_t>>
-T random_generator::random_uniform(T min, T max) {
+inline T random_generator::random_uniform(T min, T max) {
     std::uniform_real_distribution<T> dist(min, max);
     auto&& id = std::this_thread::get_id();
     if(thread_own_gens.find(id) == thread_own_gens.end()) {
@@ -69,7 +69,7 @@ T random_generator::random_uniform(T min, T max) {
 }
 
 template<class T, std::enable_if_t<std::is_integral_v<T> && std::is_signed_v<T>, std::nullptr_t>>
-T random_generator::random_normal(T mean, T max) {
+inline T random_generator::random_normal(T mean, T max) {
     if(auto&& m = std::numeric_limits<T>::max() / 2; max >= m) max = m;
     std::binomial_distribution<T> dist(max * 2, 0.5);
     auto&& id = std::this_thread::get_id();
@@ -81,7 +81,7 @@ T random_generator::random_normal(T mean, T max) {
 }
 
 template<class T, std::enable_if_t<std::is_integral_v<T> && std::is_unsigned_v<T>, std::nullptr_t>>
-T random_generator::random_normal(T mean, T max) {
+inline T random_generator::random_normal(T mean, T max) {
     if(auto&& m = std::numeric_limits<T>::max() / 2; max >= m) max = m;
     std::binomial_distribution<T> dist(max * 2, 0.5);
     auto&& id = std::this_thread::get_id();
@@ -93,7 +93,7 @@ T random_generator::random_normal(T mean, T max) {
 }
 
 template<class T, std::enable_if_t<std::is_floating_point_v<T>, std::nullptr_t>>
-T random_generator::random_normal(T mean, T stddev) {
+inline T random_generator::random_normal(T mean, T stddev) {
     std::normal_distribution<T> dist(mean, stddev);
     auto&& id = std::this_thread::get_id();
     if(thread_own_gens.find(id) == thread_own_gens.end()) {
