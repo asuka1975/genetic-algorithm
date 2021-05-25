@@ -12,7 +12,8 @@
 class string_genome {
 public:
     using expression_t = std::string;
-    static string_genome crossover(const string_genome &d1, const string_genome &d2) {
+    using crossover_config_type = int;
+    static string_genome crossover(const string_genome &d1, const string_genome &d2, const crossover_config_type&) {
         string_genome d = d1;
         for (std::size_t i = 0; i < d1.data.size(); i++) {
             if (i < d1.data.size() / 2) d.data[i] = d2.data[i];
@@ -25,7 +26,8 @@ public:
 class int_genome {
 public:
     using expression_t = int;
-    static int_genome crossover(const int_genome& d1, const int_genome& d2) {
+    using crossover_config_type = int;
+    static int_genome crossover(const int_genome& d1, const int_genome& d2, const crossover_config_type&) {
         int_genome d { d1.data < d2.data ? d2.data : d1.data };
         return d;
     }
@@ -81,19 +83,19 @@ namespace {
     TEST(RUNTIME_TEST, CROSSOVER_TEST1) {
         std::tuple<string_genome> d1 = std::make_tuple(string_genome{"aaaa"});
         std::tuple<string_genome> d2 = std::make_tuple(string_genome{"bbbb"});
-        auto d3 = genetic::crossover(d1, d2);
+        auto d3 = genetic::crossover(d1, d2, 0);
         ASSERT_EQ("bbaa", std::get<0>(d3).data);
-        auto d4 = genetic::crossover(d2, d1);
+        auto d4 = genetic::crossover(d2, d1, 0);
         ASSERT_EQ("aabb", std::get<0>(d4).data);
     }
 
     TEST(RUNTIME_TEST, CROSSOVER_TEST2) {
         std::tuple<string_genome, int_genome> d1 = std::make_tuple(string_genome{"aaaa"}, int_genome{4});
         std::tuple<string_genome, int_genome> d2 = std::make_tuple(string_genome{"bbbb"}, int_genome{3});
-        auto d3 = genetic::crossover(d1, d2);
+        auto d3 = genetic::crossover(d1, d2, std::make_tuple(0, 0));
         ASSERT_EQ("bbaa", std::get<0>(d3).data);
         ASSERT_EQ(4, std::get<1>(d3).data);
-        auto d4 = genetic::crossover(d2, d1);
+        auto d4 = genetic::crossover(d2, d1, std::make_tuple(0, 0));
         ASSERT_EQ("aabb", std::get<0>(d4).data);
         ASSERT_EQ(4, std::get<1>(d4).data);
     }
