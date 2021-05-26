@@ -11,13 +11,8 @@
 namespace genetic {
     template <std::size_t I, class... TArgs>
     inline std::tuple_element_t<I, std::tuple<TArgs...>>
-    apply(const std::tuple<TArgs...>& d1, const std::tuple<TArgs...>& d2) {
-        return std::tuple_element_t<I, std::tuple<TArgs...>>::crossover(std::get<I>(d1), std::get<I>(d2));
-    }
-
-    template <std::size_t... I, class... TArgs>
-    inline std::tuple<TArgs...> mapply(const std::tuple<TArgs...>& d1, const std::tuple<TArgs...>& d2) {
-        return std::make_tuple(apply<I, TArgs...>(d1, d2)...);
+    apply(const std::tuple<TArgs...>& d1, const std::tuple<TArgs...>& d2, const std::tuple<typename TArgs::crossover_config_type...>& config) {
+        return std::tuple_element_t<I, std::tuple<TArgs...>>::crossover(std::get<I>(d1), std::get<I>(d2), std::get<I>(config));
     }
 
     template <class... TArgs>
@@ -27,39 +22,40 @@ namespace genetic {
 
         template <class T, T... I>
         struct mapply_impl<std::integer_sequence<T, I...>> {
-            static std::tuple<TArgs...> mapply(const std::tuple<TArgs...>& d1, const std::tuple<TArgs...>& d2) {
-                return std::make_tuple(apply<I, TArgs...>(d1, d2)...);
+            static std::tuple<TArgs...> mapply(const std::tuple<TArgs...>& d1, const std::tuple<TArgs...>& d2, const std::tuple<typename TArgs::crossover_config_type...>& config) {
+                return std::make_tuple(apply<I, TArgs...>(d1, d2, config)...);
             }
         };
 
-        static std::tuple<TArgs...> mapply(const std::tuple<TArgs...>& d1, const std::tuple<TArgs...>& d2) {
-            return mapply_impl<std::index_sequence_for<TArgs...>>::mapply(d1, d2);
+        static std::tuple<TArgs...> mapply(const std::tuple<TArgs...>& d1, const std::tuple<TArgs...>& d2, const std::tuple<typename TArgs::crossover_config_type...>& config) {
+            return mapply_impl<std::index_sequence_for<TArgs...>>::mapply(d1, d2, config);
         }
     };
 
     template <class... TArgs>
-    inline std::tuple<TArgs...> crossover(const std::tuple<TArgs...>& d1, const std::tuple<TArgs...>& d2) {
-        return mapply_wrapper<TArgs...>::mapply(d1, d2);
+    inline std::tuple<TArgs...> crossover(const std::tuple<TArgs...>& d1, const std::tuple<TArgs...>& d2, const std::tuple<typename TArgs::crossover_config_type...>& config) {
+        return mapply_wrapper<TArgs...>::mapply(d1, d2, config);
     }
 
     template <class... TArgs>
     struct roulet {
         using individual_t = typename ga<TArgs...>::individual_t;
-        std::vector<individual_t> operator()(const std::vector<individual_t>& pop, const std::vector<float>& fitness);
+        std::vector<individual_t> operator()(const std::vector<individual_t>& pop, const std::vector<float>& fitness, const std::tuple<typename TArgs::crossover_config_type...>&);
     };
 
     template <class... TArgs>
     struct elite {
         using individual_t = typename ga<TArgs...>::individual_t;
         elite(std::uint64_t elitism = 1);
-        std::vector<individual_t> operator()(const std::vector<individual_t>& pop, const std::vector<float>& fitness);
+        std::vector<individual_t> operator()(const std::vector<individual_t>& pop, const std::vector<float>& fitness, const std::tuple<typename TArgs::crossover_config_type...>&);
         std::uint64_t elitism;
     };
 
     template<class... TArgs>
     std::vector<typename ga<TArgs...>::individual_t>
     roulet<TArgs...>::operator()(const std::vector<typename ga<TArgs...>::individual_t> &pop,
-                                 const std::vector<float> &fitness) {
+                                 const std::vector<float> &fitness,
+                                 const std::tuple<typename TArgs::crossover_config_type...>& config) {
         std::vector<individual_t> p(pop.size());
 
         //Instead of `pop` and `fitness`, vector of index and fitness pair is sorted.
@@ -83,7 +79,7 @@ namespace genetic {
         for(auto i = 0; i < p.size(); i++) {
             auto k = rlt(random_generator::random<float>());
             auto l = rlt(random_generator::random<float>());
-            p[i] = genetic::crossover(pop[k], pop[l]);
+            p[i] = genetic::crossover(pop[k], pop[l], config);
         }
         return p;
     }
@@ -94,7 +90,8 @@ namespace genetic {
     template <class... TArgs>
     std::vector<typename ga<TArgs...>::individual_t>
     elite<TArgs...>::operator()(const std::vector<typename ga<TArgs...>::individual_t>& pop,
-                                const std::vector<float>& fitness) {
+                                const std::vector<float>& fitness,
+                                const std::tuple<typename TArgs::crossover_config_type...>& config) {
         std::vector<individual_t> p(pop.size());
 
         //Instead of `pop` and `fitness`, vector of index and fitness pair is sorted.
@@ -118,7 +115,7 @@ namespace genetic {
         for(std::size_t i = elitism; i < p.size(); i++) {
             auto k = rlt(random_generator::random<float>());
             auto l = rlt(random_generator::random<float>());
-            p[i] = genetic::crossover(pop[k], pop[l]);
+            p[i] = genetic::crossover(pop[k], pop[l], config);
         }
         return p;
     }
