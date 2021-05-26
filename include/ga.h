@@ -31,7 +31,7 @@ namespace genetic {
         float fitness_min;
         std::uint32_t save = 0;
         std::function<void(const std::vector<expression_t>&, const std::vector<float>&)> callback;
-        std::function<std::vector<individual_t>(const std::vector<individual_t>&, const std::vector<float>&)> select;
+        std::function<std::vector<individual_t>(const std::vector<individual_t>&, const std::vector<float>&, const std::tuple<typename TArgs::crossover_config_type...>&)> select;
         std::tuple<std::function<typename TArgs::expression_t(const TArgs&)>...> express;
         std::function<std::vector<float>(const std::vector<expression_t>&)> step;
         std::function<void(const std::vector<expression_t>&)> test;
@@ -40,6 +40,7 @@ namespace genetic {
         std::tuple<std::function<TArgs()>...> initializer;
         std::vector<std::pair<float, std::function<void(individual_t&)>>> mutates;
         std::vector<std::pair<float, std::function<void(float, individual_t&)>>> node_mutates;
+        std::tuple<typename TArgs::crossover_config_type...> crossover_config;
         ga_config();
     };
 
@@ -99,7 +100,7 @@ namespace genetic {
             if(std::abs(sum) <= std::numeric_limits<float>::min()) sum = 1.0f;
             std::for_each(f.begin(), f.end(), [&sum](auto& m) { m /= sum; });
 
-            population = config.select(population, f);
+            population = config.select(population, f, config.crossover_config);
             std::uint32_t j = 0;
             for(auto& d : population) {
                 if(j < config.save) {
@@ -146,7 +147,8 @@ namespace genetic {
         fitness_min = 0.0f;
         callback = [](const std::vector<expression_t>&, const std::vector<float>&) -> void {};
         select = [](const std::vector<typename ga_config<TArgs...>::individual_t>&,
-                    const std::vector<float>&) {
+                    const std::vector<float>&,
+                    const std::tuple<typename TArgs::crossover_config_type...>&) {
             return std::vector<typename ga_config<TArgs...>::individual_t>{};
         };
         step = [](const std::vector<typename ga_config<TArgs...>::expression_t>&) {

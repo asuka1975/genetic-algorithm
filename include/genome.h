@@ -13,7 +13,7 @@ namespace genetic {
     struct is_callable_crossover : std::false_type {};
 
     template<class T>
-    struct is_callable_crossover<T, std::void_t<decltype(T::crossover(std::declval<T>(), std::declval<T>()))>>
+    struct is_callable_crossover<T, std::void_t<decltype(T::crossover(std::declval<T>(), std::declval<T>(), std::declval<typename T::crossover_config_type>()))>>
             : std::true_type {
     };
 
