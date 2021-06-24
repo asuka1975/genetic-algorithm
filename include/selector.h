@@ -32,6 +32,8 @@ namespace genetic {
         }
     };
 
+    std::size_t roulette_function(const std::vector<std::size_t>& idx, const std::vector<float>& f, float r);
+
     template <class... TArgs>
     inline std::tuple<TArgs...> crossover(const std::tuple<TArgs...>& d1, const std::tuple<TArgs...>& d2, const std::tuple<typename TArgs::crossover_config_type...>& config) {
         return mapply_wrapper<TArgs...>::mapply(d1, d2, config);
@@ -58,27 +60,12 @@ namespace genetic {
                                  const std::tuple<typename TArgs::crossover_config_type...>& config) {
         std::vector<individual_t> p(pop.size());
 
-        //Instead of `pop` and `fitness`, vector of index and fitness pair is sorted.
-        std::vector<std::pair<std::size_t, float>> f(pop.size());
-        for(auto i = 0; i < f.size(); i++) {
-            f[i] = std::make_pair(i, fitness[i]);
-        }
-        std::sort(f.begin(), f.end(), [](auto const& p1, auto const& p2) { return p1.second > p2.second; });
-
-        //return a selected index
-        auto rlt = [&f](float r) {
-            float id = 0.0f;
-            for(const auto& t : f) {
-                if(id <= r && r < (id += t.second)) {
-                    return t.first;
-                }
-            }
-            return 0lu;
-        };
+        std::vector<std::size_t> idx(pop.size());
+        std::sort(idx.begin(), idx.end(), [&fitness](auto i, auto j) { return fitness[i] > fitness[j]; });
 
         for(auto i = 0; i < p.size(); i++) {
-            auto k = rlt(random_generator::random<float>());
-            auto l = rlt(random_generator::random<float>());
+            auto k = roulette_function(idx, fitness, random_generator::random<float>());
+            auto l = roulette_function(idx, fitness, random_generator::random<float>());
             p[i] = genetic::crossover(pop[k], pop[l], config);
         }
         return p;
@@ -94,27 +81,13 @@ namespace genetic {
                                 const std::tuple<typename TArgs::crossover_config_type...>& config) {
         std::vector<individual_t> p(pop.size());
 
-        //Instead of `pop` and `fitness`, vector of index and fitness pair is sorted.
-        std::vector<std::pair<std::size_t, float>> f(pop.size());
-        for(std::size_t i = 0; i < f.size(); i++) {
-            f[i] = std::make_pair(i, fitness[i]);
-        }
-        std::sort(f.begin(), f.end(), [](auto const& p1, auto const& p2) { return p1.second > p2.second; });
+        std::vector<std::size_t> idx(pop.size());
+        std::sort(idx.begin(), idx.end(), [&fitness](auto i, auto j) { return fitness[i] > fitness[j]; });
 
-        auto rlt = [&f](float r) {
-            float id = 0.0f;
-            for(const auto& t : f) {
-                if(id <= r && r < (id += t.second)) {
-                    return t.first;
-                }
-            }
-            return 0lu;
-        };
-
-        for(std::size_t i = 0; i < elitism && i < p.size(); i++) p[i] = pop[f[i].first];
+        for(std::size_t i = 0; i < elitism && i < p.size(); i++) p[i] = pop[idx[i]];
         for(std::size_t i = elitism; i < p.size(); i++) {
-            auto k = rlt(random_generator::random<float>());
-            auto l = rlt(random_generator::random<float>());
+            auto k = roulette_function(idx, fitness, random_generator::random<float>());
+            auto l = roulette_function(idx, fitness, random_generator::random<float>());
             p[i] = genetic::crossover(pop[k], pop[l], config);
         }
         return p;
